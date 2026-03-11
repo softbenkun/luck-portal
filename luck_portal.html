@@ -6,584 +6,453 @@
 <title>LUCK 広告ポータル</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
-  :root{--bg:#0a0c10;--bg2:#111318;--bg3:#181c24;--border:#2a2f3d;--accent:#e8ff47;--accent2:#47c9ff;--accent3:#ff6b6b;--text:#e8eaf0;--text2:#8891a8;--hp:#ff6b35;--tb:#e8ff47;--gr:#47c9ff;--green:#4ade80;--yellow:#fbbf24;--red:#f87171;--radius:12px;}
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
-  .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
-  .logo{font-family:'Space Mono',monospace;font-weight:700;font-size:17px;color:var(--accent);}
-  .logo span{color:var(--text2);font-weight:400;font-size:12px;margin-left:8px;}
-  .last-updated{font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;}
-  .refresh-btn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
-  .refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .container{max-width:1200px;margin:0 auto;padding:24px 16px;}
-  .tab-nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:24px;scrollbar-width:none;}
-  .tab-nav::-webkit-scrollbar{display:none;}
-  .tab-btn{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .2s;white-space:nowrap;}
-  .tab-btn.active{background:var(--accent);color:#0a0c10;border-color:var(--accent);font-weight:700;}
-  .tab-btn:hover:not(.active){border-color:var(--accent);color:var(--accent);}
-  .tab-content{display:none;}.tab-content.active{display:block;}
-  .section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-  .section-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;}
-  .overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px;}
-  .store-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;border-top:3px solid transparent;}
-  .store-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.5);}
-  .store-name{font-weight:700;font-size:15px;margin-bottom:3px;}
-  .store-area{font-size:11px;color:var(--text2);margin-bottom:14px;}
-  .store-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .metric{background:var(--bg3);border-radius:8px;padding:9px 12px;}
-  .metric-label{font-size:10px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;}
-  .metric-value{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;}
-  .good{color:var(--green);}.warn{color:var(--yellow);}.bad{color:var(--red);}
-  .tabelog-score{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
-  .score-badge{background:var(--bg3);border-radius:6px;padding:3px 10px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
-  .score-label{font-size:11px;color:var(--text2);}
-  .tabelog-link{color:var(--accent2);text-decoration:none;font-size:11px;border:1px solid var(--accent2);padding:2px 8px;border-radius:4px;margin-left:auto;transition:all .2s;}
-  .tabelog-link:hover{background:var(--accent2);color:#0a0c10;}
-  .status-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;}
-  .status-badge.ok{background:rgba(74,222,128,.1);color:var(--green);}
-  .status-badge.demo{background:rgba(251,191,36,.1);color:var(--yellow);}
-  .chart-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;}
-  .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
-  .chart-title{font-size:12px;color:var(--text2);margin-bottom:14px;font-weight:500;}
-  .chart-wrap{position:relative;height:200px;}
-  .chart-wrap-lg{position:relative;height:260px;}
-  .media-table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;}
-  .tbl{width:100%;border-collapse:collapse;font-size:13px;}
-  .tbl th{background:var(--bg3);padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border);}
-  .tbl td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
-  .tbl tr:last-child td{border-bottom:none;}
-  .tbl tr:hover td{background:var(--bg3);}
-  .media-tag{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;}
-  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-  .num{font-family:'Space Mono',monospace;font-size:12px;}
-  .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px;}
-  .kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
-  .kpi-label{font-size:10px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
-  .kpi-value{font-family:'Space Mono',monospace;font-size:19px;font-weight:700;color:var(--accent);}
-  .kpi-sub{font-size:10px;color:var(--text2);margin-top:3px;}
-  .back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:20px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
-  .back-btn:hover{color:var(--accent);border-color:var(--accent);}
-  .store-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;}
-  .store-header-title{font-size:22px;font-weight:700;margin-bottom:4px;}
-  .store-header-sub{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  .monthly-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;margin-bottom:24px;}
-  .monthly-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:700px;}
-  .monthly-tbl th{background:var(--bg3);padding:9px 12px;text-align:center;font-size:10px;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;}
-  .monthly-tbl th:first-child{text-align:left;}
-  .monthly-tbl td{padding:8px 12px;text-align:center;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:11px;white-space:nowrap;}
-  .monthly-tbl td:first-child{text-align:left;font-family:'Noto Sans JP',sans-serif;font-size:11px;color:var(--text2);}
-  .monthly-tbl tr:last-child td{border-bottom:none;}
-  .monthly-tbl .sec-row td{background:var(--bg3);color:var(--text2);font-size:10px;padding:5px 12px;}
-  .monthly-tbl .tot-row td{color:var(--accent);font-weight:700;}
-  .monthly-tbl .sub-row td{color:var(--text);}
-  /* 損益P&L専用 */
-  .pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px;}
-  .pl-store-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;}
-  .pl-store-name{font-weight:700;font-size:13px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
-  .pl-rows{display:flex;flex-direction:column;gap:6px;}
-  .pl-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;}
-  .pl-row-label{color:var(--text2);}
-  .pl-row-value{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
-  .pl-divider{height:1px;background:var(--border);margin:8px 0;}
-  .pl-profit-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-radius:6px;padding:8px 10px;margin-top:8px;}
-  .pl-profit-label{font-size:12px;font-weight:700;}
-  .pl-profit-value{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;}
-  .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .loading-msg{text-align:center;padding:48px 20px;color:var(--text2);font-size:14px;}
-  .demo-notice{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px 16px;color:var(--yellow);font-size:12px;margin-bottom:20px;}
-  @media(max-width:600px){
-    .header{padding:10px 14px;}.logo span{display:none;}
-    .container{padding:14px 10px;}.kpi-row{grid-template-columns:1fr 1fr;}
-    .overview-grid,.pl-grid{grid-template-columns:1fr;}.store-header-title{font-size:18px;}
-  }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+:root{--bg:#0a0c10;--bg2:#111318;--bg3:#181c24;--border:#2a2f3d;--accent:#e8ff47;--accent2:#47c9ff;--text:#e8eaf0;--text2:#8891a8;--green:#4ade80;--yellow:#fbbf24;--red:#f87171;--r:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Space Mono',monospace;font-weight:700;font-size:17px;color:var(--accent);}
+.logo span{color:var(--text2);font-weight:400;font-size:12px;margin-left:8px;}
+.upd{font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;}
+.rbtn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .2s;}
+.rbtn:hover{border-color:var(--accent);color:var(--accent);}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 16px;}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:24px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .2s;white-space:nowrap;}
+.tab.on{background:var(--accent);color:#0a0c10;border-color:var(--accent);font-weight:700;}
+.tab:hover:not(.on){border-color:var(--accent);color:var(--accent);}
+.pane{display:none;}.pane.on{display:block;}
+.stit{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.stit::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;}
+.grid6{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px;}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;border-top:3px solid transparent;}
+.scard:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.sn{font-weight:700;font-size:15px;margin-bottom:3px;}
+.sa{font-size:11px;color:var(--text2);margin-bottom:14px;}
+.mets{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.met{background:var(--bg3);border-radius:8px;padding:9px 12px;}
+.ml{font-size:10px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;}
+.mv{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;}
+.g{color:var(--green);}.w{color:var(--yellow);}.b{color:var(--red);}
+.tscore{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.sbadge{background:var(--bg3);border-radius:6px;padding:3px 10px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
+.sl{font-size:11px;color:var(--text2);}
+.tlink{color:var(--accent2);text-decoration:none;font-size:11px;border:1px solid var(--accent2);padding:2px 8px;border-radius:4px;margin-left:auto;transition:all .2s;}
+.tlink:hover{background:var(--accent2);color:#0a0c10;}
+.stbadge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;}
+.stbadge.ok{background:rgba(74,222,128,.1);color:var(--green);}
+.stbadge.dm{background:rgba(251,191,36,.1);color:var(--yellow);}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;}
+.cc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.ct{font-size:12px;color:var(--text2);margin-bottom:14px;font-weight:500;}
+.cw{position:relative;height:200px;}
+.cwl{position:relative;height:260px;}
+.tbwrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:24px;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--bg3);padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border);}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--bg3);}
+.mtag{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.num{font-family:'Space Mono',monospace;font-size:12px;}
+.krow{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px;}
+.kc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
+.kl{font-size:10px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.kv{font-family:'Space Mono',monospace;font-size:19px;font-weight:700;color:var(--accent);}
+.ks{font-size:10px;color:var(--text2);margin-top:3px;}
+.bbtn{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:20px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
+.bbtn:hover{color:var(--accent);border-color:var(--accent);}
+.shdr{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;}
+.sht{font-size:22px;font-weight:700;margin-bottom:4px;}
+.shs{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.mwrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow-x:auto;margin-bottom:24px;}
+.mtbl{width:100%;border-collapse:collapse;font-size:12px;min-width:700px;}
+.mtbl th{background:var(--bg3);padding:9px 12px;text-align:center;font-size:10px;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;}
+.mtbl th:first-child{text-align:left;}
+.mtbl td{padding:8px 12px;text-align:center;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:11px;white-space:nowrap;}
+.mtbl td:first-child{text-align:left;font-family:'Noto Sans JP',sans-serif;font-size:11px;color:var(--text2);}
+.mtbl tr:last-child td{border-bottom:none;}
+.mtbl .sr td{background:var(--bg3);color:var(--text2);font-size:10px;padding:5px 12px;}
+.mtbl .tr td{color:var(--accent);font-weight:700;}
+.mtbl .nr td{color:var(--text);}
+.plg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px;}
+.plc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;}
+.pln{font-weight:700;font-size:13px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.plrs{display:flex;flex-direction:column;gap:6px;}
+.plr{display:flex;justify-content:space-between;align-items:center;font-size:12px;}
+.plrl{color:var(--text2);}
+.plrv{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
+.pldiv{height:1px;background:var(--border);margin:8px 0;}
+.plpr{display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-radius:6px;padding:8px 10px;margin-top:8px;}
+.plpl{font-size:12px;font-weight:700;}
+.plpv{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.ldg{text-align:center;padding:48px 20px;color:var(--text2);font-size:14px;}
+.dnote{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px 16px;color:var(--yellow);font-size:12px;margin-bottom:20px;}
+@media(max-width:600px){
+  .hdr{padding:10px 14px;}.logo span{display:none;}
+  .wrap{padding:14px 10px;}.krow{grid-template-columns:1fr 1fr;}
+  .grid6,.plg{grid-template-columns:1fr;}.sht{font-size:18px;}
+}
 </style>
 </head>
 <body>
-
-<div class="header">
+<div class="hdr">
   <div class="logo">LUCK<span>広告ポータル</span></div>
   <div style="display:flex;align-items:center;gap:12px;">
-    <div class="last-updated" id="lastUpdated">—</div>
-    <button class="refresh-btn" onclick="loadAllData()">↻ 更新</button>
+    <div class="upd" id="upd">---</div>
+    <button class="rbtn" onclick="loadAll()">&#8635; 更新</button>
   </div>
 </div>
-
-<div class="container">
-
-  <div class="tab-nav" id="tabNav">
-    <button class="tab-btn active" onclick="switchTab('overview',this)">📊 全店舗概要</button>
-    <button class="tab-btn" onclick="switchTab('compare',this)">🔍 媒体比較</button>
-    <button class="tab-btn" onclick="switchTab('pl',this)">💰 損益一覧</button>
-    <button class="tab-btn" onclick="switchTab('detail',this)" id="detailTabBtn" style="display:none;">📋 店舗詳細</button>
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab on" onclick="sw('ov',this)">&#128202; 全店舗概要</button>
+    <button class="tab" onclick="sw('cm',this)">&#128269; 媒体比較</button>
+    <button class="tab" onclick="sw('pl',this)">&#128176; 損益一覧</button>
+    <button class="tab" onclick="sw('dt',this)" id="dtBtn" style="display:none;">&#128203; 店舗詳細</button>
   </div>
 
-  <!-- ===== 全店舗概要 ===== -->
-  <div class="tab-content active" id="tab-overview">
-    <div class="demo-notice" id="demoNotice">⚠ デモモード：GAS URLを設定するまでサンプルデータで表示しています</div>
-    <div class="section-title">6店舗 広告KPIサマリー</div>
-    <div class="overview-grid" id="overviewGrid">
-      <div class="loading-msg" style="grid-column:1/-1"><span class="spinner"></span>読み込み中...</div>
-    </div>
-    <div class="section-title">全店舗 月次売上推移</div>
-    <div class="chart-card" style="margin-bottom:24px;">
-      <div class="chart-title">月別売上（6店舗合計）</div>
-      <div class="chart-wrap-lg"><canvas id="chartAllSales"></canvas></div>
-    </div>
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">媒体別 広告費（6店舗合計）</div>
-        <div class="chart-wrap"><canvas id="chartAdCost"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">媒体別 集客人数（6店舗合計）</div>
-        <div class="chart-wrap"><canvas id="chartGuest"></canvas></div>
-      </div>
+  <div class="pane on" id="pane-ov">
+    <div class="dnote" id="dnote" style="display:none;">&#9888; デモモード：サンプルデータで表示しています</div>
+    <div class="stit">6店舗 広告KPIサマリー</div>
+    <div class="grid6" id="ovGrid"><div class="ldg" style="grid-column:1/-1"><span class="spin"></span>読み込み中...</div></div>
+    <div class="stit">全店舗 月次売上推移</div>
+    <div class="cc" style="margin-bottom:24px;"><div class="ct">月別売上（6店舗合計）</div><div class="cwl"><canvas id="cAllSales"></canvas></div></div>
+    <div class="cgrid">
+      <div class="cc"><div class="ct">媒体別 広告費（6店舗合計）</div><div class="cw"><canvas id="cAdCost"></canvas></div></div>
+      <div class="cc"><div class="ct">媒体別 集客人数（6店舗合計）</div><div class="cw"><canvas id="cGuest"></canvas></div></div>
     </div>
   </div>
 
-  <!-- ===== 媒体比較 ===== -->
-  <div class="tab-content" id="tab-compare">
-    <div class="section-title">媒体別 費用対効果（累計）</div>
-    <div class="media-table-wrap">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th>店舗</th><th>媒体</th><th>累計広告費</th><th>累計集客</th><th>CPC/1人</th><th>評価</th>
-          </tr>
-        </thead>
-        <tbody id="mediaBody">
-          <tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text2);"><span class="spinner"></span>読み込み中...</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="section-title">CPC/1人 比較（店舗×媒体）</div>
-    <div class="chart-card" style="margin-bottom:24px;">
-      <div class="chart-wrap-lg"><canvas id="chartCpc"></canvas></div>
-    </div>
+  <div class="pane" id="pane-cm">
+    <div class="stit">媒体別 費用対効果（累計）</div>
+    <div class="tbwrap"><table class="tbl">
+      <thead><tr><th>店舗</th><th>媒体</th><th>累計広告費</th><th>累計集客</th><th>CPC/1人</th><th>評価</th></tr></thead>
+      <tbody id="cmBody"><tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text2);"><span class="spin"></span>読み込み中...</td></tr></tbody>
+    </table></div>
+    <div class="stit">CPC/1人 比較（店舗×媒体）</div>
+    <div class="cc" style="margin-bottom:24px;"><div class="cwl"><canvas id="cCpc"></canvas></div></div>
   </div>
 
-  <!-- ===== 損益一覧 ===== -->
-  <div class="tab-content" id="tab-pl">
-    <div class="section-title">6店舗 損益サマリー（累計）</div>
-    <div class="pl-grid" id="plGrid">
-      <div class="loading-msg" style="grid-column:1/-1"><span class="spinner"></span>読み込み中...</div>
+  <div class="pane" id="pane-pl">
+    <div class="stit">6店舗 損益サマリー（累計）</div>
+    <div class="plg" id="plGrid"><div class="ldg" style="grid-column:1/-1"><span class="spin"></span>読み込み中...</div></div>
+    <div class="stit">営業利益 月次推移（6店舗）</div>
+    <div class="cc" style="margin-bottom:24px;"><div class="ct">営業利益（月別）</div><div class="cwl"><canvas id="cOpProfit"></canvas></div></div>
+    <div class="cgrid">
+      <div class="cc"><div class="ct">売上vs粗利（累計比較）</div><div class="cw"><canvas id="cGross"></canvas></div></div>
+      <div class="cc"><div class="ct">費用内訳（6店舗平均構成）</div><div class="cw"><canvas id="cCost"></canvas></div></div>
     </div>
-    <div class="section-title">営業利益 月次推移（6店舗）</div>
-    <div class="chart-card" style="margin-bottom:24px;">
-      <div class="chart-title">営業利益（月別）</div>
-      <div class="chart-wrap-lg"><canvas id="chartOpProfit"></canvas></div>
-    </div>
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">売上vs粗利（累計比較）</div>
-        <div class="chart-wrap"><canvas id="chartGrossCompare"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">費用内訳（6店舗平均構成）</div>
-        <div class="chart-wrap"><canvas id="chartCostBreakdown"></canvas></div>
-      </div>
-    </div>
-    <div class="section-title">損益 月次詳細</div>
+    <div class="stit">損益 月次詳細</div>
     <div style="margin-bottom:12px;">
-      <select id="plStoreSelect" onchange="renderPLDetail()" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">
+      <select id="plSel" onchange="renderPLDetail()" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">
         <option value="">店舗を選択してください</option>
       </select>
     </div>
-    <div id="plDetailTable"></div>
+    <div id="plDetail"></div>
   </div>
 
-  <!-- ===== 店舗詳細 ===== -->
-  <div class="tab-content" id="tab-detail">
-    <button class="back-btn" onclick="backToOverview()">← 一覧に戻る</button>
-    <div id="storeDetailContent"><div class="loading-msg"><span class="spinner"></span>読み込み中...</div></div>
+  <div class="pane" id="pane-dt">
+    <button class="bbtn" onclick="backOv()">&#8592; 一覧に戻る</button>
+    <div id="dtContent"><div class="ldg"><span class="spin"></span>読み込み中...</div></div>
   </div>
-
 </div>
 
 <script>
-// ============================================================
-// ★ 設定：GASデプロイ後にURLを入力してください
-// ============================================================
-const STORES = [
-  { id:'niiyama',         name:'おばんざい酒場 にいやま', area:'北浜',  genre:'居酒屋',       score:3.19, reviews:48,  tabelogUrl:'https://tabelog.com/osaka/A2701/A270102/27114120/', color:'#e8ff47', adGasUrl:'https://script.google.com/macros/s/AKfycbxfrNMarxRmz1vLFz0DIiQXUBQRARvQX3KmX49s9WZdOY59YKn4muU1RUKOCxFBiY0v/exec', plGasUrl:'' },
-  { id:'shichifuku_awa',  name:'炭焼和牛 七福',           area:'阿波座',genre:'焼肉',          score:3.17, reviews:32,  tabelogUrl:'https://tabelog.com/osaka/A2701/A270105/27051372/', color:'#ff6b35', adGasUrl:'https://script.google.com/macros/s/AKfycbwSpGkWaNhVfuHeCvg1sX8xqUMnt6WBru6BjL5Djp0H_sZGx3L08kQFn92Pupb1Wq3BmQ/exec', plGasUrl:'' },
-  { id:'hwajaya',         name:'韓国料理居酒屋 ふぁじゃ家', area:'本町', genre:'韓国料理',      score:3.26, reviews:41,  tabelogUrl:'https://tabelog.com/osaka/A2701/A270106/27131003/', color:'#ff47a0', adGasUrl:'https://script.google.com/macros/s/AKfycbybpTPF6X-BlKM-UJrdLoNhVEHzmQSChRoXYS1JmWY-6JtlMzlEBMgCkPrBMuEiXzET/exec', plGasUrl:'' },
-  { id:'hormon',          name:'七福 通天閣店',           area:'新世界',genre:'串揚げ・焼肉',   score:3.28, reviews:57,  tabelogUrl:'https://tabelog.com/osaka/A2701/A270206/27062559/', color:'#47c9ff', adGasUrl:'https://script.google.com/macros/s/AKfycbx8MfKiicaPsLtdktK26zrjp5bpJZDL1T94EqjbssjWSyo5wc3qTi7Ngfa7vrJErZY4/exec', plGasUrl:'' },
-  { id:'kushikatsu',      name:'なにわの串カツ 七福',     area:'新世界',genre:'串カツ・鍋',     score:3.09, reviews:29,  tabelogUrl:'https://tabelog.com/osaka/A2701/A270206/27102638/', color:'#a78bfa', adGasUrl:'https://script.google.com/macros/s/AKfycbxY0Bgh7S20a8bzenzZHiqrWauURVaJqCxHtk0_QXIVGiqFk0P5qq4KWSRuQkVb4b6NKw/exec', plGasUrl:'' },
-  { id:'konamono',        name:'なにわの粉もん 七福',     area:'新世界',genre:'たこ焼き・粉もん',score:3.05, reviews:5,   tabelogUrl:'https://tabelog.com/osaka/A2701/A270206/27146974/', color:'#34d399', adGasUrl:'https://script.google.com/macros/s/AKfycbzU5QA2hb-XfbyvAcq9NzSwumhJsBtR-ox7HVR5CCjLRWb9U88ZseJqIrqZbaE5fkFmXA/exec', plGasUrl:'' },
+var STORES = [
+  {id:'niiyama',name:'おばんざい酒場 にいやま',area:'北浜',genre:'居酒屋',score:3.19,rev:48,turl:'https://tabelog.com/osaka/A2701/A270102/27114120/',color:'#e8ff47',adUrl:'https://script.google.com/macros/s/AKfycbxfrNMarxRmz1vLFz0DIiQXUBQRARvQX3KmX49s9WZdOY59YKn4muU1RUKOCxFBiY0v/exec',plUrl:''},
+  {id:'awa',name:'炭焼和牛 七福',area:'阿波座',genre:'焼肉',score:3.17,rev:32,turl:'https://tabelog.com/osaka/A2701/A270105/27051372/',color:'#ff6b35',adUrl:'https://script.google.com/macros/s/AKfycbwSpGkWaNhVfuHeCvg1sX8xqUMnt6WBru6BjL5Djp0H_sZGx3L08kQFn92Pupb1Wq3BmQ/exec',plUrl:''},
+  {id:'hwajaya',name:'韓国料理居酒屋 ふぁじゃ家',area:'本町',genre:'韓国料理',score:3.26,rev:41,turl:'https://tabelog.com/osaka/A2701/A270106/27131003/',color:'#ff47a0',adUrl:'https://script.google.com/macros/s/AKfycbybpTPF6X-BlKM-UJrdLoNhVEHzmQSChRoXYS1JmWY-6JtlMzlEBMgCkPrBMuEiXzET/exec',plUrl:''},
+  {id:'hormon',name:'七福 通天閣店',area:'新世界',genre:'串揚げ・焼肉',score:3.28,rev:57,turl:'https://tabelog.com/osaka/A2701/A270206/27062559/',color:'#47c9ff',adUrl:'https://script.google.com/macros/s/AKfycbx8MfKiicaPsLtdktK26zrjp5bpJZDL1T94EqjbssjWSyo5wc3qTi7Ngfa7vrJErZY4/exec',plUrl:''},
+  {id:'kushi',name:'なにわの串カツ 七福',area:'新世界',genre:'串カツ・鍋',score:3.09,rev:29,turl:'https://tabelog.com/osaka/A2701/A270206/27102638/',color:'#a78bfa',adUrl:'https://script.google.com/macros/s/AKfycbxY0Bgh7S20a8bzenzZHiqrWauURVaJqCxHtk0_QXIVGiqFk0P5qq4KWSRuQkVb4b6NKw/exec',plUrl:''},
+  {id:'kona',name:'なにわの粉もん 七福',area:'新世界',genre:'たこ焼き・粉もん',score:3.05,rev:5,turl:'https://tabelog.com/osaka/A2701/A270206/27146974/',color:'#34d399',adUrl:'https://script.google.com/macros/s/AKfycbzU5QA2hb-XfbyvAcq9NzSwumhJsBtR-ox7HVR5CCjLRWb9U88ZseJqIrqZbaE5fkFmXA/exec',plUrl:''},
 ];
 
-// ④⑤合算損益GAS URL（経費合算のため）
-const COMBINED_PL_GAS_URL = '';
+var adC={},plC={},charts={};
 
-const adCache = {}, plCache = {};
-let charts = {}, currentStore = null;
+function sumArr(a){return (a||[]).reduce(function(x,y){return x+y;},0);}
 
-// ============================================================
-// データ取得
-// ============================================================
-async function loadAllData() {
-  document.getElementById('lastUpdated').textContent = '更新中...';
-  await Promise.all([
-    ...STORES.map(s => fetchAd(s)),
-    ...STORES.map(s => fetchPL(s)),
-  ]);
-  renderOverview();
-  renderMediaCompare();
-  renderPLOverview();
-  initPLSelect();
-  const t = new Date();
-  document.getElementById('lastUpdated').textContent = `${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')} 更新`;
-  const allDemo = STORES.every(s => !s.adGasUrl && !s.plGasUrl);
-  document.getElementById('demoNotice').style.display = allDemo ? 'block' : 'none';
-}
-
-async function fetchAd(store) {
-  if (!store.adGasUrl) { adCache[store.id] = mockAd(store); return; }
-  try {
-    const d = await (await fetch(store.adGasUrl)).json();
-    if (!d.summary.totalSalesSum) d.summary.totalSalesSum = (d.summary.totalSales||[]).reduce((a,b)=>a+b,0);
-    if (!d.summary.totalAdCostSum) d.summary.totalAdCostSum = (d.summary.totalAdCost||[]).reduce((a,b)=>a+b,0);
-    if (!d.summary.totalGuestSum) d.summary.totalGuestSum = (d.summary.totalGuest||[]).reduce((a,b)=>a+b,0);
-    ["hotpepper","tabelog","gurunavi"].forEach(k=>{
-      if (!d[k].guestSum) d[k].guestSum=(d[k].guest||[]).reduce((a,b)=>a+b,0);
-      if (!d[k].actualSum) d[k].actualSum=(d[k].actual||[]).reduce((a,b)=>a+b,0);
-    });
-    adCache[store.id] = d;
-  } catch(e) { adCache[store.id] = mockAd(store); }
-}
-async function fetchPL(store) {
-  if (!store.plGasUrl) { plCache[store.id] = mockPL(store); return; }
-  try { plCache[store.id] = await (await fetch(store.plGasUrl)).json(); }
-  catch(e) { plCache[store.id] = mockPL(store); }
-}
-
-// ============================================================
-// モックデータ
-// ============================================================
-function mockAd(s) {
-  const months = ['6月','7月','8月','9月','10月','11月','12月','1月'];
-  const base = [4500000,4200000,3800000,4100000,4600000,3900000,5200000,3700000].map(v=>Math.round(v*(0.8+Math.random()*.4)));
-  const hp   = months.map(()=>Math.round(90+Math.random()*60));
-  const tb   = months.map(()=>Math.round(100+Math.random()*80));
-  const gr   = months.map(()=>Math.round(40+Math.random()*40));
-  return {
-    months,
-    summary:{totalSales:base,totalAdCost:base.map(v=>Math.round(v*.045)),adRatio:base.map(v=>4.5),totalGuestSum:hp.reduce((a,b)=>a+b,0)+tb.reduce((a,b)=>a+b,0)+gr.reduce((a,b)=>a+b,0),totalSalesSum:base.reduce((a,b)=>a+b,0),totalAdCostSum:Math.round(base.reduce((a,b)=>a+b,0)*.045)},
-    hotpepper:{guest:hp,actual:hp.map(v=>Math.round(v*1200)),cpcPerson:hp.map(()=>Math.round(1100+Math.random()*700)),guestSum:hp.reduce((a,b)=>a+b,0),actualSum:hp.reduce((a,b)=>a+b,0)*1200},
-    tabelog:  {guest:tb,actual:tb.map(v=>Math.round(v*350)), cpcPerson:tb.map(()=>Math.round(300+Math.random()*350)), guestSum:tb.reduce((a,b)=>a+b,0),actualSum:tb.reduce((a,b)=>a+b,0)*350},
-    gurunavi: {guest:gr,actual:gr.map(v=>Math.round(v*900)), cpcPerson:gr.map(()=>Math.round(700+Math.random()*600)), guestSum:gr.reduce((a,b)=>a+b,0),actualSum:gr.reduce((a,b)=>a+b,0)*900},
-  };
-}
-function mockPL(s) {
-  const months = ['6月','7月','8月','9月','10月','11月','12月','1月'];
-  const sales = months.map(()=>Math.round((4000000+Math.random()*1500000)));
-  const cost  = sales.map(v=>Math.round(v*.28));
-  const gross = sales.map((v,i)=>v-cost[i]);
-  const labor = sales.map(v=>Math.round(v*.32));
-  const rent  = sales.map(()=>500000);
-  const util  = sales.map(v=>Math.round(v*.06));
-  const ad    = sales.map(v=>Math.round(v*.045));
-  const sga   = sales.map((v,i)=>labor[i]+rent[i]+util[i]+ad[i]+Math.round(v*.04));
-  const op    = gross.map((v,i)=>v-sga[i]);
-  const sum   = arr=>arr.reduce((a,b)=>a+b,0);
-  return {months,prevSales:sales.map(v=>Math.round(v*.9)),sales,yoyRatio:sales.map(()=>110),cost,gross,labor,rent,utility:util,ad,sga,opProfit:op,salesSum:sum(sales),grossSum:sum(gross),sgaSum:sum(sga),opProfitSum:sum(op),laborSum:sum(labor),rentSum:sum(rent),adSum:sum(ad),detail:{labor,legalCost:labor.map(v=>Math.round(v*.15)),rent,utility:util,comms:months.map(()=>15000),bank:months.map(()=>25000),ad,supplies:months.map(()=>Math.round(30000+Math.random()*20000)),misc:months.map(()=>Math.round(10000+Math.random()*15000)),insurance:months.map(()=>20000),entertain:months.map(()=>Math.round(5000+Math.random()*10000)),depreciate:months.map(()=>50000)}};
-}
-
-// ============================================================
-// 概要タブ
-// ============================================================
-function renderOverview() {
-  const grid = document.getElementById('overviewGrid');
-  grid.innerHTML = '';
-  STORES.forEach(s=>{
-    const d = adCache[s.id];
-    if(!d) return;
-    const totalSales = d.summary.totalSalesSum||0;
-    const totalAd = d.summary.totalAdCostSum||0;
-    const adRatio = totalSales>0?(totalAd/totalSales*100).toFixed(1):'—';
-    const g = d.summary.totalGuestSum||0;
-    const cpc = g>0?Math.round(totalAd/g):0;
-    const ratioClass = parseFloat(adRatio)>6?'bad':parseFloat(adRatio)>4?'warn':'good';
-    const scoreClass = s.score>=3.5?'good':s.score>=3.2?'warn':'bad';
-    const c = document.createElement('div');
-    c.className='store-card';
-    c.style.borderTopColor=s.color;
-    c.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;">
-        <div class="store-name">${s.name}</div>
-        <span class="status-badge ${s.adGasUrl?'ok':'demo'}">${s.adGasUrl?'●LIVE':'●DEMO'}</span>
-      </div>
-      <div class="store-area">${s.area}｜${s.genre}</div>
-      <div class="store-metrics">
-        <div class="metric"><div class="metric-label">累計売上</div><div class="metric-value">¥${fmtM(totalSales)}</div></div>
-        <div class="metric"><div class="metric-label">累計広告費</div><div class="metric-value">¥${fmtK(totalAd)}</div></div>
-        <div class="metric"><div class="metric-label">広告費率</div><div class="metric-value ${ratioClass}">${adRatio}%</div></div>
-        <div class="metric"><div class="metric-label">CPC/1人</div><div class="metric-value">¥${cpc.toLocaleString()}</div></div>
-      </div>
-      <div class="tabelog-score">
-        <div class="score-badge ${scoreClass}">${s.score}</div>
-        <div class="score-label">食べログ｜${s.reviews}件</div>
-        <a href="${s.tabelogUrl}" target="_blank" class="tabelog-link" onclick="event.stopPropagation()">→</a>
-      </div>`;
-    c.onclick=()=>showDetail(s.id);
-    grid.appendChild(c);
-  });
-  renderAllSalesChart();
-  renderAdGuestCharts();
-}
-
-function renderAllSalesChart() {
-  const months = adCache[STORES[0].id]?.months||[];
-  dc('chartAllSales');
-  charts.allSales=new Chart(document.getElementById('chartAllSales'),{
-    type:'line',data:{labels:months,datasets:STORES.map(s=>({label:s.name.slice(0,9),data:adCache[s.id]?.summary?.totalSales||[],borderColor:s.color,backgroundColor:s.color+'18',borderWidth:2,pointRadius:3,tension:.3}))},
-    options:cOpts('¥'),
+function loadAll(){
+  document.getElementById('upd').textContent='更新中...';
+  var proms=[];
+  for(var i=0;i<STORES.length;i++){proms.push(fetchAd(STORES[i]));proms.push(fetchPL(STORES[i]));}
+  Promise.all(proms).then(function(){
+    renderOv();renderCm();renderPL();initPLSel();
+    var t=new Date();
+    document.getElementById('upd').textContent=t.getHours()+':'+String(t.getMinutes()).padStart(2,'0')+' 更新';
+    var demo=true;
+    for(var i=0;i<STORES.length;i++){if(STORES[i].adUrl||STORES[i].plUrl){demo=false;break;}}
+    document.getElementById('dnote').style.display=demo?'block':'none';
   });
 }
-function renderAdGuestCharts() {
-  const months = adCache[STORES[0].id]?.months||[];
-  const sum=(key,sub)=>months.map((_,i)=>STORES.reduce((t,s)=>{const d=adCache[s.id];return t+(d?.[key]?.[sub]?.[i]||0):0},0));
-  dc('chartAdCost');
-  charts.adCost=new Chart(document.getElementById('chartAdCost'),{type:'bar',data:{labels:months,datasets:[
-    {label:'HP',data:sum('hotpepper','actual'),backgroundColor:'rgba(255,107,53,.7)',stack:'a'},
-    {label:'食べログ',data:sum('tabelog','actual'),backgroundColor:'rgba(232,255,71,.7)',stack:'a'},
-    {label:'ぐるなび',data:sum('gurunavi','actual'),backgroundColor:'rgba(71,201,255,.7)',stack:'a'},
-  ]},options:{...cOpts('¥'),scales:{x:dAxis(),y:{...dAxis(),stacked:true}}}});
-  dc('chartGuest');
-  charts.guest=new Chart(document.getElementById('chartGuest'),{type:'bar',data:{labels:months,datasets:[
-    {label:'HP',data:sum('hotpepper','guest'),backgroundColor:'rgba(255,107,53,.7)',stack:'a'},
-    {label:'食べログ',data:sum('tabelog','guest'),backgroundColor:'rgba(232,255,71,.7)',stack:'a'},
-    {label:'ぐるなび',data:sum('gurunavi','guest'),backgroundColor:'rgba(71,201,255,.7)',stack:'a'},
-  ]},options:{...cOpts('人'),scales:{x:dAxis(),y:{...dAxis(),stacked:true}}}});
+
+function fetchAd(s){
+  if(!s.adUrl){adC[s.id]=mockAd(s);return Promise.resolve();}
+  return fetch(s.adUrl).then(function(r){return r.json();}).then(function(d){
+    var ts=d.summary.totalSales||[];
+    var ta=d.summary.totalAdCost||[];
+    var tg=d.summary.totalGuest||[];
+    if(!d.summary.totalSalesSum)d.summary.totalSalesSum=sumArr(ts);
+    if(!d.summary.totalAdCostSum)d.summary.totalAdCostSum=sumArr(ta);
+    if(!d.summary.totalGuestSum)d.summary.totalGuestSum=sumArr(tg);
+    var keys=['hotpepper','tabelog','gurunavi'];
+    for(var k=0;k<keys.length;k++){
+      var key=keys[k];
+      if(!d[key].guestSum)d[key].guestSum=sumArr(d[key].guest);
+      if(!d[key].actualSum)d[key].actualSum=sumArr(d[key].actual);
+    }
+    adC[s.id]=d;
+  }).catch(function(){adC[s.id]=mockAd(s);});
 }
 
-// ============================================================
-// 媒体比較タブ
-// ============================================================
-function renderMediaCompare() {
-  const tbody = document.getElementById('mediaBody');
-  const rows=[];
-  STORES.forEach(s=>{
-    const d=adCache[s.id];if(!d)return;
-    const medias=[
-      {key:'hotpepper',name:'ホットペッパー',dot:'#ff6b35',cls:'hp'},
-      {key:'tabelog',  name:'食べログ',      dot:'#e8ff47',cls:'tb'},
-      {key:'gurunavi', name:'ぐるなび',      dot:'#47c9ff',cls:'gr'},
-    ];
-    medias.forEach((m,i)=>{
-      const aSum=d[m.key]?.actualSum||0;
-      const gSum=d[m.key]?.guestSum||0;
-      const cpc=gSum>0?Math.round(aSum/gSum):0;
-      const ec=cpc<500?'good':cpc<1200?'warn':'bad';
-      const el=cpc<500?'◎ 優秀':cpc<1200?'△ 普通':'✗ 要見直し';
-      rows.push(`<tr>
-        ${i===0?`<td rowspan="3" style="font-weight:600;font-size:12px;border-right:1px solid var(--border);">${s.name}<br><span style="color:var(--text2);font-size:10px;font-weight:400;">${s.area}</span></td>`:''}
-        <td><span class="media-tag"><span class="dot" style="background:${m.dot}"></span>${m.name}</span></td>
-        <td><span class="num">¥${fmtK(aSum)}</span></td>
-        <td><span class="num">${gSum.toLocaleString()}人</span></td>
-        <td><span class="num">¥${cpc.toLocaleString()}</span></td>
-        <td><span class="${ec}" style="font-size:12px;font-weight:700;">${el}</span></td>
-      </tr>`);
-    });
-  });
-  tbody.innerHTML=rows.join('');
-  renderCpcChart();
-}
-function renderCpcChart(){
-  const names=STORES.map(s=>s.name.slice(0,8));
-  const cpc=(key)=>STORES.map(s=>{const d=adCache[s.id]?.[key];return d?.guestSum>0?Math.round(d.actualSum/d.guestSum):0;});
-  dc('chartCpc');
-  charts.cpc=new Chart(document.getElementById('chartCpc'),{type:'bar',data:{labels:names,datasets:[
-    {label:'HP',data:cpc('hotpepper'),backgroundColor:'rgba(255,107,53,.8)'},
-    {label:'食べログ',data:cpc('tabelog'),backgroundColor:'rgba(232,255,71,.8)'},
-    {label:'ぐるなび',data:cpc('gurunavi'),backgroundColor:'rgba(71,201,255,.8)'},
-  ]},options:{...cOpts('¥'),scales:{x:dAxis(),y:dAxis()}}});
+function fetchPL(s){
+  if(!s.plUrl){plC[s.id]=mockPL(s);return Promise.resolve();}
+  return fetch(s.plUrl).then(function(r){return r.json();}).then(function(d){plC[s.id]=d;}).catch(function(){plC[s.id]=mockPL(s);});
 }
 
-// ============================================================
-// 損益タブ
-// ============================================================
-function renderPLOverview(){
-  const grid=document.getElementById('plGrid');
+function mockAd(s){
+  var m=['6月','7月','8月','9月','10月','11月','12月','1月'];
+  var base=[4500000,4200000,3800000,4100000,4600000,3900000,5200000,3700000].map(function(v){return Math.round(v*(0.8+Math.random()*.4));});
+  var hp=m.map(function(){return Math.round(90+Math.random()*60);});
+  var tb=m.map(function(){return Math.round(100+Math.random()*80);});
+  var gr=m.map(function(){return Math.round(40+Math.random()*40);});
+  return{months:m,summary:{totalSales:base,totalAdCost:base.map(function(v){return Math.round(v*.045);}),totalGuestSum:sumArr(hp)+sumArr(tb)+sumArr(gr),totalSalesSum:sumArr(base),totalAdCostSum:Math.round(sumArr(base)*.045)},
+    hotpepper:{guest:hp,actual:hp.map(function(v){return Math.round(v*1200);}),guestSum:sumArr(hp),actualSum:sumArr(hp)*1200},
+    tabelog:{guest:tb,actual:tb.map(function(v){return Math.round(v*350);}),guestSum:sumArr(tb),actualSum:sumArr(tb)*350},
+    gurunavi:{guest:gr,actual:gr.map(function(v){return Math.round(v*900);}),guestSum:sumArr(gr),actualSum:sumArr(gr)*900}};
+}
+
+function mockPL(s){
+  var m=['6月','7月','8月','9月','10月','11月','12月','1月'];
+  var sales=m.map(function(){return Math.round(4000000+Math.random()*1500000);});
+  var cost=sales.map(function(v){return Math.round(v*.28);});
+  var gross=sales.map(function(v,i){return v-cost[i];});
+  var labor=sales.map(function(v){return Math.round(v*.32);});
+  var rent=sales.map(function(){return 500000;});
+  var util=sales.map(function(v){return Math.round(v*.06);});
+  var ad=sales.map(function(v){return Math.round(v*.045);});
+  var sga=sales.map(function(v,i){return labor[i]+rent[i]+util[i]+ad[i]+Math.round(v*.04);});
+  var op=gross.map(function(v,i){return v-sga[i];});
+  return{months:m,prevSales:sales.map(function(v){return Math.round(v*.9);}),sales:sales,yoyRatio:m.map(function(){return 110;}),
+    cost:cost,gross:gross,labor:labor,rent:rent,utility:util,ad:ad,sga:sga,opProfit:op,
+    salesSum:sumArr(sales),grossSum:sumArr(gross),sgaSum:sumArr(sga),opProfitSum:sumArr(op),
+    laborSum:sumArr(labor),rentSum:sumArr(rent),adSum:sumArr(ad),
+    detail:{labor:labor,legalCost:labor.map(function(v){return Math.round(v*.15);}),rent:rent,utility:util,
+      comms:m.map(function(){return 15000;}),bank:m.map(function(){return 25000;}),ad:ad,
+      supplies:m.map(function(){return Math.round(30000+Math.random()*20000);}),
+      misc:m.map(function(){return Math.round(10000+Math.random()*15000);}),
+      insurance:m.map(function(){return 20000;}),entertain:m.map(function(){return Math.round(5000+Math.random()*10000);}),
+      depreciate:m.map(function(){return 50000;})}};
+}
+
+function getMonths(){var d=adC[STORES[0].id];return d?d.months:[];}
+
+function renderOv(){
+  var grid=document.getElementById('ovGrid');
   grid.innerHTML='';
-  STORES.forEach(s=>{
-    const d=plCache[s.id];if(!d)return;
-    const profitClass=d.opProfitSum>0?'good':d.opProfitSum>-500000?'warn':'bad';
-    const grossMargin=d.salesSum>0?(d.grossSum/d.salesSum*100).toFixed(1):'—';
-    const opMargin=d.salesSum>0?(d.opProfitSum/d.salesSum*100).toFixed(1):'—';
-    const laborRatio=d.salesSum>0?(d.laborSum/d.salesSum*100).toFixed(1):'—';
-    const c=document.createElement('div');
-    c.className='pl-store-card';
-    c.style.borderTopColor=s.color;
-    c.style.borderTopWidth='3px';
-    c.innerHTML=`
-      <div class="pl-store-name">
-        <span>${s.name}</span>
-        <span style="font-size:10px;color:var(--text2);font-weight:400;">${s.area}</span>
-      </div>
-      <div class="pl-rows">
-        <div class="pl-row"><span class="pl-row-label">累計売上</span><span class="pl-row-value">¥${fmtM(d.salesSum)}</span></div>
-        <div class="pl-row"><span class="pl-row-label">粗利</span><span class="pl-row-value good">¥${fmtM(d.grossSum)} <span style="font-size:10px;">(${grossMargin}%)</span></span></div>
-        <div class="pl-divider"></div>
-        <div class="pl-row"><span class="pl-row-label">人件費率</span><span class="pl-row-value ${parseFloat(laborRatio)>35?'bad':parseFloat(laborRatio)>30?'warn':'good'}">${laborRatio}%</span></div>
-        <div class="pl-row"><span class="pl-row-label">広告費率</span><span class="pl-row-value">${d.salesSum>0?(d.adSum/d.salesSum*100).toFixed(1):0}%</span></div>
-      </div>
-      <div class="pl-profit-row">
-        <span class="pl-profit-label">営業利益</span>
-        <span class="pl-profit-value ${profitClass}">¥${fmtK(d.opProfitSum)}<span style="font-size:11px;margin-left:6px;">(${opMargin}%)</span></span>
-      </div>`;
+  for(var i=0;i<STORES.length;i++){
+    var s=STORES[i];var d=adC[s.id];if(!d)continue;
+    var ts=d.summary.totalSalesSum||0;var ta=d.summary.totalAdCostSum||0;
+    var ar=ts>0?(ta/ts*100).toFixed(1):'---';var g=d.summary.totalGuestSum||0;
+    var cpc=g>0?Math.round(ta/g):0;
+    var arc=parseFloat(ar)>6?'b':parseFloat(ar)>4?'w':'g';
+    var sc=s.score>=3.5?'g':s.score>=3.2?'w':'b';
+    var c=document.createElement('div');c.className='scard';c.style.borderTopColor=s.color;
+    c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;"><div class="sn">'+s.name+'</div><span class="stbadge '+(s.adUrl?'ok':'dm')+'">'+(s.adUrl?'&#9679;LIVE':'&#9679;DEMO')+'</span></div>'+
+      '<div class="sa">'+s.area+'｜'+s.genre+'</div>'+
+      '<div class="mets"><div class="met"><div class="ml">累計売上</div><div class="mv">&#165;'+fmtM(ts)+'</div></div>'+
+      '<div class="met"><div class="ml">累計広告費</div><div class="mv">&#165;'+fmtK(ta)+'</div></div>'+
+      '<div class="met"><div class="ml">広告費率</div><div class="mv '+arc+'">'+ar+'%</div></div>'+
+      '<div class="met"><div class="ml">CPC/1人</div><div class="mv">&#165;'+cpc.toLocaleString()+'</div></div></div>'+
+      '<div class="tscore"><div class="sbadge '+sc+'">'+s.score+'</div><div class="sl">食べログ｜'+s.rev+'件</div>'+
+      '<a href="'+s.turl+'" target="_blank" class="tlink" onclick="event.stopPropagation()">&#8594;</a></div>';
+    (function(sid){c.onclick=function(){showDetail(sid);};})(s.id);
     grid.appendChild(c);
+  }
+  renderAllSales();renderAdGuest();
+}
+
+function renderAllSales(){
+  var months=getMonths();var datasets=[];
+  for(var i=0;i<STORES.length;i++){var s=STORES[i];
+    datasets.push({label:s.name.slice(0,9),data:(adC[s.id]&&adC[s.id].summary.totalSales)||[],borderColor:s.color,backgroundColor:s.color+'18',borderWidth:2,pointRadius:3,tension:.3});}
+  dc('cAllSales');charts.allSales=new Chart(document.getElementById('cAllSales'),{type:'line',data:{labels:months,datasets:datasets},options:cOpts('¥')});
+}
+
+function getMediaSum(key,sub){
+  var months=getMonths();
+  return months.map(function(_,i){
+    var tot=0;
+    for(var j=0;j<STORES.length;j++){var d=adC[STORES[j].id];if(d&&d[key]&&d[key][sub])tot+=(d[key][sub][i]||0);}
+    return tot;
   });
+}
+
+function renderAdGuest(){
+  var months=getMonths();
+  var opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8891a8',font:{size:11},boxWidth:12}}},scales:{x:dAxis(),y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8891a8',font:{size:10}},stacked:true}}};
+  dc('cAdCost');charts.adCost=new Chart(document.getElementById('cAdCost'),{type:'bar',data:{labels:months,datasets:[
+    {label:'HP',data:getMediaSum('hotpepper','actual'),backgroundColor:'rgba(255,107,53,.7)',stack:'a'},
+    {label:'食べログ',data:getMediaSum('tabelog','actual'),backgroundColor:'rgba(232,255,71,.7)',stack:'a'},
+    {label:'ぐるなび',data:getMediaSum('gurunavi','actual'),backgroundColor:'rgba(71,201,255,.7)',stack:'a'}
+  ]},options:opts});
+  dc('cGuest');charts.guest=new Chart(document.getElementById('cGuest'),{type:'bar',data:{labels:months,datasets:[
+    {label:'HP',data:getMediaSum('hotpepper','guest'),backgroundColor:'rgba(255,107,53,.7)',stack:'a'},
+    {label:'食べログ',data:getMediaSum('tabelog','guest'),backgroundColor:'rgba(232,255,71,.7)',stack:'a'},
+    {label:'ぐるなび',data:getMediaSum('gurunavi','guest'),backgroundColor:'rgba(71,201,255,.7)',stack:'a'}
+  ]},options:opts});
+}
+
+function renderCm(){
+  var rows=[];
+  var medias=[{key:'hotpepper',name:'ホットペッパー',dot:'#ff6b35'},{key:'tabelog',name:'食べログ',dot:'#e8ff47'},{key:'gurunavi',name:'ぐるなび',dot:'#47c9ff'}];
+  for(var i=0;i<STORES.length;i++){
+    var s=STORES[i];var d=adC[s.id];if(!d)continue;
+    for(var j=0;j<medias.length;j++){
+      var m=medias[j];var aSum=d[m.key]?(d[m.key].actualSum||0):0;var gSum=d[m.key]?(d[m.key].guestSum||0):0;
+      var cpc=gSum>0?Math.round(aSum/gSum):0;var ec=cpc<500?'g':cpc<1200?'w':'b';var el=cpc<500?'&#9675; 優秀':cpc<1200?'&#9651; 普通':'&#10005; 要見直し';
+      var first=j===0?'<td rowspan="3" style="font-weight:600;font-size:12px;border-right:1px solid var(--border);">'+s.name+'<br><span style="color:var(--text2);font-size:10px;font-weight:400;">'+s.area+'</span></td>':'';
+      rows.push('<tr>'+first+'<td><span class="mtag"><span class="dot" style="background:'+m.dot+'"></span>'+m.name+'</span></td><td><span class="num">&#165;'+fmtK(aSum)+'</span></td><td><span class="num">'+gSum.toLocaleString()+'人</span></td><td><span class="num">&#165;'+cpc.toLocaleString()+'</span></td><td><span class="'+ec+'" style="font-size:12px;font-weight:700;">'+el+'</span></td></tr>');
+    }
+  }
+  document.getElementById('cmBody').innerHTML=rows.join('');
+  renderCpc();
+}
+
+function renderCpc(){
+  var names=[];for(var i=0;i<STORES.length;i++)names.push(STORES[i].name.slice(0,8));
+  var getCpc=function(key){var res=[];for(var i=0;i<STORES.length;i++){var d=adC[STORES[i].id];res.push(d&&d[key]&&d[key].guestSum>0?Math.round(d[key].actualSum/d[key].guestSum):0);}return res;};
+  dc('cCpc');charts.cpc=new Chart(document.getElementById('cCpc'),{type:'bar',data:{labels:names,datasets:[
+    {label:'HP',data:getCpc('hotpepper'),backgroundColor:'rgba(255,107,53,.8)'},
+    {label:'食べログ',data:getCpc('tabelog'),backgroundColor:'rgba(232,255,71,.8)'},
+    {label:'ぐるなび',data:getCpc('gurunavi'),backgroundColor:'rgba(71,201,255,.8)'}
+  ]},options:cOpts('¥')});
+}
+
+function renderPL(){
+  var grid=document.getElementById('plGrid');grid.innerHTML='';
+  for(var i=0;i<STORES.length;i++){
+    var s=STORES[i];var d=plC[s.id];if(!d)continue;
+    var pc=d.opProfitSum>0?'g':d.opProfitSum>-500000?'w':'b';
+    var gm=d.salesSum>0?(d.grossSum/d.salesSum*100).toFixed(1):'---';
+    var om=d.salesSum>0?(d.opProfitSum/d.salesSum*100).toFixed(1):'---';
+    var lr=d.salesSum>0?(d.laborSum/d.salesSum*100).toFixed(1):'---';
+    var lrc=parseFloat(lr)>35?'b':parseFloat(lr)>30?'w':'g';
+    var ar2=d.salesSum>0?(d.adSum/d.salesSum*100).toFixed(1):0;
+    var c=document.createElement('div');c.className='plc';c.style.borderTopColor=s.color;c.style.borderTopWidth='3px';
+    c.innerHTML='<div class="pln"><span>'+s.name+'</span><span style="font-size:10px;color:var(--text2);font-weight:400;">'+s.area+'</span></div>'+
+      '<div class="plrs"><div class="plr"><span class="plrl">累計売上</span><span class="plrv">&#165;'+fmtM(d.salesSum)+'</span></div>'+
+      '<div class="plr"><span class="plrl">粗利</span><span class="plrv g">&#165;'+fmtM(d.grossSum)+' <span style="font-size:10px;">('+gm+'%)</span></span></div>'+
+      '<div class="pldiv"></div>'+
+      '<div class="plr"><span class="plrl">人件費率</span><span class="plrv '+lrc+'">'+lr+'%</span></div>'+
+      '<div class="plr"><span class="plrl">広告費率</span><span class="plrv">'+ar2+'%</span></div></div>'+
+      '<div class="plpr"><span class="plpl">営業利益</span><span class="plpv '+pc+'">&#165;'+fmtK(d.opProfitSum)+'<span style="font-size:11px;margin-left:6px;">('+om+'%)</span></span></div>';
+    grid.appendChild(c);
+  }
   renderPLCharts();
 }
 
 function renderPLCharts(){
-  const months=plCache[STORES[0].id]?.months||[];
-  // 営業利益月次推移
-  dc('chartOpProfit');
-  charts.opProfit=new Chart(document.getElementById('chartOpProfit'),{type:'bar',data:{labels:months,datasets:STORES.map(s=>({label:s.name.slice(0,9),data:plCache[s.id]?.opProfit||[],backgroundColor:s.color+'cc',borderColor:s.color,borderWidth:1}))},options:{...cOpts('¥'),scales:{x:dAxis(),y:dAxis()}}});
-  // 売上vs粗利比較（6店舗）
-  const storeNames=STORES.map(s=>s.name.slice(0,8));
-  dc('chartGrossCompare');
-  charts.grossCompare=new Chart(document.getElementById('chartGrossCompare'),{type:'bar',data:{labels:storeNames,datasets:[
-    {label:'売上',data:STORES.map(s=>plCache[s.id]?.salesSum||0),backgroundColor:'rgba(100,116,139,.5)'},
-    {label:'粗利',data:STORES.map(s=>plCache[s.id]?.grossSum||0),backgroundColor:'rgba(74,222,128,.7)'},
-    {label:'営業利益',data:STORES.map(s=>plCache[s.id]?.opProfitSum||0),backgroundColor:'rgba(232,255,71,.7)'},
-  ]},options:{...cOpts('¥'),scales:{x:dAxis(),y:dAxis()}}});
-  // 費用内訳ドーナツ（全店舗平均）
-  const avg=(key)=>Math.round(STORES.reduce((t,s)=>t+(plCache[s.id]?.[key+'Sum']||0),0)/STORES.length);
-  dc('chartCostBreakdown');
-  charts.costBreakdown=new Chart(document.getElementById('chartCostBreakdown'),{type:'doughnut',data:{labels:['人件費','家賃','光熱費','広告費','その他'],datasets:[{data:[avg('labor'),avg('rent'),Math.round(avg('labor')*.19),avg('ad'),Math.round(avg('sga')*.25)],backgroundColor:['rgba(248,113,113,.8)','rgba(251,191,36,.8)','rgba(71,201,255,.8)','rgba(232,255,71,.8)','rgba(100,116,139,.8)'],borderWidth:0}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8891a8',font:{size:11},boxWidth:12}}}}});
+  var first=plC[STORES[0].id];var months=first?first.months:[];
+  var ds=[];for(var i=0;i<STORES.length;i++){var s=STORES[i];ds.push({label:s.name.slice(0,9),data:(plC[s.id]&&plC[s.id].opProfit)||[],backgroundColor:s.color+'cc',borderColor:s.color,borderWidth:1});}
+  dc('cOpProfit');charts.opProfit=new Chart(document.getElementById('cOpProfit'),{type:'bar',data:{labels:months,datasets:ds},options:cOpts('¥')});
+  var snames=[],salesD=[],grossD=[],opD=[];
+  for(var i=0;i<STORES.length;i++){var s=STORES[i];snames.push(s.name.slice(0,8));salesD.push(plC[s.id]?plC[s.id].salesSum:0);grossD.push(plC[s.id]?plC[s.id].grossSum:0);opD.push(plC[s.id]?plC[s.id].opProfitSum:0);}
+  dc('cGross');charts.gross=new Chart(document.getElementById('cGross'),{type:'bar',data:{labels:snames,datasets:[
+    {label:'売上',data:salesD,backgroundColor:'rgba(100,116,139,.5)'},
+    {label:'粗利',data:grossD,backgroundColor:'rgba(74,222,128,.7)'},
+    {label:'営業利益',data:opD,backgroundColor:'rgba(232,255,71,.7)'}
+  ]},options:cOpts('¥')});
+  var avg=function(key){var tot=0;for(var i=0;i<STORES.length;i++)tot+=(plC[STORES[i].id]?(plC[STORES[i].id][key+'Sum']||0):0);return Math.round(tot/STORES.length);};
+  dc('cCost');charts.cost=new Chart(document.getElementById('cCost'),{type:'doughnut',data:{labels:['人件費','家賃','光熱費','広告費','その他'],datasets:[{data:[avg('labor'),avg('rent'),Math.round(avg('labor')*.19),avg('ad'),Math.round(avg('sga')*.25)],backgroundColor:['rgba(248,113,113,.8)','rgba(251,191,36,.8)','rgba(71,201,255,.8)','rgba(232,255,71,.8)','rgba(100,116,139,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8891a8',font:{size:11},boxWidth:12}}}}});
 }
 
-function initPLSelect(){
-  const sel=document.getElementById('plStoreSelect');
-  sel.innerHTML='<option value="">店舗を選択してください</option>';
-  STORES.forEach(s=>sel.innerHTML+=`<option value="${s.id}">${s.name}</option>`);
+function initPLSel(){
+  var sel=document.getElementById('plSel');sel.innerHTML='<option value="">店舗を選択してください</option>';
+  for(var i=0;i<STORES.length;i++)sel.innerHTML+='<option value="'+STORES[i].id+'">'+STORES[i].name+'</option>';
 }
 
 function renderPLDetail(){
-  const id=document.getElementById('plStoreSelect').value;
-  const container=document.getElementById('plDetailTable');
-  if(!id){container.innerHTML='';return;}
-  const d=plCache[id];
-  const s=STORES.find(x=>x.id===id);
-  if(!d){container.innerHTML='<div style="color:var(--text2);font-size:13px;">データなし</div>';return;}
-  const months=d.months||[];
-  const fmt=(v)=>typeof v==='number'&&v!==0?'¥'+v.toLocaleString():'—';
-  const rows=[
-    {label:'売上高',      data:d.sales,      cls:'tot-row'},
-    {label:'前年売上高',  data:d.prevSales,  cls:'sub-row'},
-    {label:'前年比',      data:d.yoyRatio?.map(v=>v?v+'%':'—'),  cls:'sub-row'},
-    {label:'──',         data:null,          cls:'sec-row'},
-    {label:'売上原価',    data:d.cost,       cls:'sub-row'},
-    {label:'売上総利益',  data:d.gross,      cls:'tot-row'},
-    {label:'──販管費',   data:null,          cls:'sec-row'},
-    {label:'人件費',      data:d.detail?.labor,      cls:'sub-row'},
-    {label:'賃借料',      data:d.detail?.rent,       cls:'sub-row'},
-    {label:'水道光熱費',  data:d.detail?.utility,    cls:'sub-row'},
-    {label:'広告宣伝費',  data:d.detail?.ad,         cls:'sub-row'},
-    {label:'消耗品費',    data:d.detail?.supplies,   cls:'sub-row'},
-    {label:'通信費',      data:d.detail?.comms,      cls:'sub-row'},
-    {label:'支払手数料',  data:d.detail?.bank,       cls:'sub-row'},
-    {label:'法定福利費',  data:d.detail?.legalCost,  cls:'sub-row'},
-    {label:'販管費合計',  data:d.sga,        cls:'tot-row'},
-    {label:'──',         data:null,          cls:'sec-row'},
-    {label:'営業利益',    data:d.opProfit,   cls:'tot-row'},
+  var id=document.getElementById('plSel').value;var cont=document.getElementById('plDetail');
+  if(!id){cont.innerHTML='';return;}
+  var d=plC[id];var s=null;for(var i=0;i<STORES.length;i++){if(STORES[i].id===id){s=STORES[i];break;}}
+  if(!d||!s){cont.innerHTML='<div style="color:var(--text2);">データなし</div>';return;}
+  var months=d.months||[];var det=d.detail||{};
+  var fmt=function(v){return typeof v==='number'&&v!==0?'&#165;'+v.toLocaleString():'---';};
+  var yoy=(d.yoyRatio||[]).map(function(v){return v?v+'%':'---';});
+  var rows=[
+    {lbl:'売上高',data:d.sales,cls:'tr'},{lbl:'前年売上高',data:d.prevSales,cls:'nr'},{lbl:'前年比',data:yoy,cls:'nr'},
+    {lbl:'---',data:null,cls:'sr'},{lbl:'売上原価',data:d.cost,cls:'nr'},{lbl:'売上総利益',data:d.gross,cls:'tr'},
+    {lbl:'---販管費',data:null,cls:'sr'},
+    {lbl:'人件費',data:det.labor,cls:'nr'},{lbl:'賃借料',data:det.rent,cls:'nr'},{lbl:'水道光熱費',data:det.utility,cls:'nr'},
+    {lbl:'広告宣伝費',data:det.ad,cls:'nr'},{lbl:'消耗品費',data:det.supplies,cls:'nr'},{lbl:'通信費',data:det.comms,cls:'nr'},
+    {lbl:'支払手数料',data:det.bank,cls:'nr'},{lbl:'法定福利費',data:det.legalCost,cls:'nr'},
+    {lbl:'販管費合計',data:d.sga,cls:'tr'},{lbl:'---',data:null,cls:'sr'},{lbl:'営業利益',data:d.opProfit,cls:'tr'}
   ];
-  container.innerHTML=`
-    <div class="monthly-wrap">
-      <table class="monthly-tbl">
-        <thead><tr><th>${s.name}</th>${months.map(m=>`<th>${m}</th>`).join('')}<th style="color:var(--accent);">合計</th></tr></thead>
-        <tbody>
-          ${rows.map(r=>{
-            if(r.cls==='sec-row')return`<tr class="sec-row"><td colspan="${months.length+2}">${r.label}</td></tr>`;
-            const sum=r.data?r.data.filter(v=>typeof v==='number').reduce((a,b)=>a+b,0):0;
-            const sumFmt=sum!==0?'¥'+sum.toLocaleString():'—';
-            return`<tr class="${r.cls}"><td>${r.label}</td>${(r.data||months.map(()=>null)).slice(0,months.length).map(v=>typeof v==='number'?`<td>${fmt(v)}</td>`:`<td style="color:var(--text2);">${v||'—'}</td>`).join('')}<td>${sumFmt}</td></tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>`;
+  var ths=months.map(function(m){return '<th>'+m+'</th>';}).join('');
+  var trs=rows.map(function(r){
+    if(r.cls==='sr')return '<tr class="sr"><td colspan="'+(months.length+2)+'">'+r.lbl+'</td></tr>';
+    var numD=(r.data||[]).filter(function(v){return typeof v==='number';});
+    var sum=numD.reduce(function(a,b){return a+b;},0);
+    var sf=sum!==0?'&#165;'+sum.toLocaleString():'---';
+    var src=r.data||months.map(function(){return null;});
+    var tds=src.slice(0,months.length).map(function(v){return typeof v==='number'?'<td>'+fmt(v)+'</td>':'<td style="color:var(--text2);">'+(v||'---')+'</td>';}).join('');
+    return '<tr class="'+r.cls+'"><td>'+r.lbl+'</td>'+tds+'<td>'+sf+'</td></tr>';
+  }).join('');
+  cont.innerHTML='<div class="mwrap"><table class="mtbl"><thead><tr><th>'+s.name+'</th>'+ths+'<th style="color:var(--accent);">合計</th></tr></thead><tbody>'+trs+'</tbody></table></div>';
 }
 
-// ============================================================
-// 店舗詳細
-// ============================================================
 function showDetail(id){
-  currentStore=id;
-  const s=STORES.find(x=>x.id===id);
-  const ad=adCache[id];
-  const pl=plCache[id];
-  document.getElementById('detailTabBtn').style.display='flex';
-  switchTab('detail',document.getElementById('detailTabBtn'));
-  if(!ad||!pl||!s){document.getElementById('storeDetailContent').innerHTML='<div style="color:var(--accent3);">データ取得エラー</div>';return;}
-  const months=ad.months||[];
-  const totalSales=ad.summary.totalSalesSum||0;
-  const totalAd=ad.summary.totalAdCostSum||0;
-  const g=ad.summary.totalGuestSum||0;
-  const cpc=g>0?Math.round(totalAd/g):0;
-  const adRatio=totalSales>0?(totalAd/totalSales*100).toFixed(1):'—';
-  const opMargin=pl.salesSum>0?(pl.opProfitSum/pl.salesSum*100).toFixed(1):'—';
-  const profitClass=pl.opProfitSum>0?'good':pl.opProfitSum>-500000?'warn':'bad';
-  document.getElementById('storeDetailContent').innerHTML=`
-    <div class="store-header">
-      <div>
-        <div class="store-header-title">${s.name}</div>
-        <div class="store-header-sub">
-          ${s.area}｜${s.genre}
-          <a href="${s.tabelogUrl}" target="_blank" class="tabelog-link">食べログ →</a>
-          <span style="background:${s.color}22;color:${s.color};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">★${s.score}</span>
-        </div>
-      </div>
-    </div>
-    <div class="kpi-row">
-      <div class="kpi-card"><div class="kpi-label">累計売上</div><div class="kpi-value">¥${fmtM(totalSales)}</div><div class="kpi-sub">税込</div></div>
-      <div class="kpi-card"><div class="kpi-label">累計広告費</div><div class="kpi-value">¥${fmtK(totalAd)}</div><div class="kpi-sub">広告費率 ${adRatio}%</div></div>
-      <div class="kpi-card"><div class="kpi-label">累計集客</div><div class="kpi-value">${g.toLocaleString()}人</div><div class="kpi-sub">全媒体合計</div></div>
-      <div class="kpi-card"><div class="kpi-label">CPC/1人</div><div class="kpi-value">¥${cpc.toLocaleString()}</div></div>
-      <div class="kpi-card"><div class="kpi-label">営業利益</div><div class="kpi-value ${profitClass}">¥${fmtK(pl.opProfitSum)}</div><div class="kpi-sub">営業利益率 ${opMargin}%</div></div>
-      <div class="kpi-card"><div class="kpi-label">食べログ</div><div class="kpi-value" style="color:${s.color};">${s.score}</div><div class="kpi-sub">${s.reviews}件のレビュー</div></div>
-    </div>
-    <div class="chart-grid">
-      <div class="chart-card"><div class="chart-title">月次売上</div><div class="chart-wrap"><canvas id="dSales"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title">月次営業利益</div><div class="chart-wrap"><canvas id="dProfit"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title">媒体別集客</div><div class="chart-wrap"><canvas id="dGuest"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title">媒体別広告費</div><div class="chart-wrap"><canvas id="dAd"></canvas></div></div>
-    </div>`;
-  setTimeout(()=>{
-    new Chart(document.getElementById('dSales'),{type:'line',data:{labels:months,datasets:[{label:'売上',data:ad.summary.totalSales,borderColor:s.color,backgroundColor:s.color+'18',borderWidth:2,fill:true,tension:.3}]},options:cOpts('¥')});
-    new Chart(document.getElementById('dProfit'),{type:'bar',data:{labels:months,datasets:[{label:'営業利益',data:pl.opProfit,backgroundColor:pl.opProfit.map(v=>v>=0?'rgba(74,222,128,.7)':'rgba(248,113,113,.7)'),borderRadius:4}]},options:cOpts('¥')});
-    new Chart(document.getElementById('dGuest'),{type:'bar',data:{labels:months,datasets:[{label:'HP',data:ad.hotpepper.guest,backgroundColor:'rgba(255,107,53,.8)',stack:'a'},{label:'食べログ',data:ad.tabelog.guest,backgroundColor:'rgba(232,255,71,.8)',stack:'a'},{label:'ぐるなび',data:ad.gurunavi.guest,backgroundColor:'rgba(71,201,255,.8)',stack:'a'}]},options:{...cOpts('人'),scales:{x:dAxis(),y:{...dAxis(),stacked:true}}}});
-    new Chart(document.getElementById('dAd'),{type:'bar',data:{labels:months,datasets:[{label:'HP',data:ad.hotpepper.actual,backgroundColor:'rgba(255,107,53,.8)',stack:'a'},{label:'食べログ',data:ad.tabelog.actual,backgroundColor:'rgba(232,255,71,.8)',stack:'a'},{label:'ぐるなび',data:ad.gurunavi.actual,backgroundColor:'rgba(71,201,255,.8)',stack:'a'}]},options:{...cOpts('¥'),scales:{x:dAxis(),y:{...dAxis(),stacked:true}}}});
+  var s=null;for(var i=0;i<STORES.length;i++){if(STORES[i].id===id){s=STORES[i];break;}}
+  var ad=adC[id];var pl=plC[id];
+  document.getElementById('dtBtn').style.display='flex';sw('dt',document.getElementById('dtBtn'));
+  if(!ad||!s){document.getElementById('dtContent').innerHTML='<div style="color:#f87171;">データ取得エラー</div>';return;}
+  var months=ad.months||[];var ts=ad.summary.totalSalesSum||0;var ta=ad.summary.totalAdCostSum||0;
+  var g=ad.summary.totalGuestSum||0;var cpc=g>0?Math.round(ta/g):0;
+  var ar=ts>0?(ta/ts*100).toFixed(1):'---';
+  var om=(pl&&pl.salesSum>0)?(pl.opProfitSum/pl.salesSum*100).toFixed(1):'---';
+  var pc=(pl&&pl.opProfitSum>0)?'g':(pl&&pl.opProfitSum>-500000)?'w':'b';
+  var plKpi=pl?'<div class="kc"><div class="kl">営業利益</div><div class="kv '+pc+'">&#165;'+fmtK(pl.opProfitSum)+'</div><div class="ks">営業利益率 '+om+'%</div></div>':'';
+  var plChart=pl?'<div class="cc"><div class="ct">月次営業利益</div><div class="cw"><canvas id="dP"></canvas></div></div>':'';
+  document.getElementById('dtContent').innerHTML=
+    '<div class="shdr"><div><div class="sht">'+s.name+'</div>'+
+    '<div class="shs">'+s.area+'｜'+s.genre+' <a href="'+s.turl+'" target="_blank" class="tlink">食べログ &#8594;</a>'+
+    ' <span style="background:'+s.color+'22;color:'+s.color+';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">&#9733;'+s.score+'</span></div></div></div>'+
+    '<div class="krow"><div class="kc"><div class="kl">累計売上</div><div class="kv">&#165;'+fmtM(ts)+'</div><div class="ks">税込</div></div>'+
+    '<div class="kc"><div class="kl">累計広告費</div><div class="kv">&#165;'+fmtK(ta)+'</div><div class="ks">広告費率 '+ar+'%</div></div>'+
+    '<div class="kc"><div class="kl">累計集客</div><div class="kv">'+g.toLocaleString()+'人</div><div class="ks">全媒体合計</div></div>'+
+    '<div class="kc"><div class="kl">CPC/1人</div><div class="kv">&#165;'+cpc.toLocaleString()+'</div></div>'+plKpi+
+    '<div class="kc"><div class="kl">食べログ</div><div class="kv" style="color:'+s.color+';">'+s.score+'</div><div class="ks">'+s.rev+'件のレビュー</div></div></div>'+
+    '<div class="cgrid"><div class="cc"><div class="ct">月次売上</div><div class="cw"><canvas id="dS"></canvas></div></div>'+plChart+
+    '<div class="cc"><div class="ct">媒体別集客</div><div class="cw"><canvas id="dG"></canvas></div></div>'+
+    '<div class="cc"><div class="ct">媒体別広告費</div><div class="cw"><canvas id="dA"></canvas></div></div></div>';
+  var sc=s.color;var plOp=pl?pl.opProfit:null;
+  var stkOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8891a8',font:{size:11},boxWidth:12}}},scales:{x:dAxis(),y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8891a8',font:{size:10}},stacked:true}}};
+  setTimeout(function(){
+    new Chart(document.getElementById('dS'),{type:'line',data:{labels:months,datasets:[{label:'売上',data:ad.summary.totalSales,borderColor:sc,backgroundColor:sc+'18',borderWidth:2,fill:true,tension:.3}]},options:cOpts('¥')});
+    if(pl&&plOp)new Chart(document.getElementById('dP'),{type:'bar',data:{labels:months,datasets:[{label:'営業利益',data:plOp,backgroundColor:plOp.map(function(v){return v>=0?'rgba(74,222,128,.7)':'rgba(248,113,113,.7)';}),borderRadius:4}]},options:cOpts('¥')});
+    new Chart(document.getElementById('dG'),{type:'bar',data:{labels:months,datasets:[{label:'HP',data:ad.hotpepper.guest,backgroundColor:'rgba(255,107,53,.8)',stack:'a'},{label:'食べログ',data:ad.tabelog.guest,backgroundColor:'rgba(232,255,71,.8)',stack:'a'},{label:'ぐるなび',data:ad.gurunavi.guest,backgroundColor:'rgba(71,201,255,.8)',stack:'a'}]},options:stkOpts});
+    new Chart(document.getElementById('dA'),{type:'bar',data:{labels:months,datasets:[{label:'HP',data:ad.hotpepper.actual,backgroundColor:'rgba(255,107,53,.8)',stack:'a'},{label:'食べログ',data:ad.tabelog.actual,backgroundColor:'rgba(232,255,71,.8)',stack:'a'},{label:'ぐるなび',data:ad.gurunavi.actual,backgroundColor:'rgba(71,201,255,.8)',stack:'a'}]},options:stkOpts});
   },100);
 }
 
-function backToOverview(){
-  document.getElementById('detailTabBtn').style.display='none';
-  switchTab('overview',document.querySelector('.tab-btn'));
-}
+function backOv(){document.getElementById('dtBtn').style.display='none';sw('ov',document.querySelector('.tab'));}
 
-// ============================================================
-// ユーティリティ
-// ============================================================
-function switchTab(id,btn){
-  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  if(btn) btn.classList.add('active');
+function sw(id,btn){
+  var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
+  var ts=document.querySelectorAll('.tab');for(var i=0;i<ts.length;i++)ts[i].classList.remove('on');
+  document.getElementById('pane-'+id).classList.add('on');if(btn)btn.classList.add('on');
 }
-function dc(id){const c=document.getElementById(id);if(c){const ex=Chart.getChart(c);if(ex)ex.destroy();}}
-function fmtM(v){if(!v)return'0';if(v>=1000000)return(v/1000000).toFixed(1)+'M';if(v>=1000)return Math.round(v/1000)+'K';return v.toLocaleString();}
-function fmtK(v){if(!v&&v!==0)return'0';if(Math.abs(v)>=1000000)return(v/1000000).toFixed(1)+'M';if(Math.abs(v)>=1000)return Math.round(v/1000)+'K';return v.toLocaleString();}
-function dAxis(){return{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8891a8',font:{size:10}}};}
-function cOpts(unit){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8891a8',font:{size:11},boxWidth:12}},tooltip:{backgroundColor:'#181c24',titleColor:'#e8eaf0',bodyColor:'#8891a8',borderColor:'#2a2f3d',borderWidth:1,callbacks:{label:ctx=>` ${ctx.dataset.label}: ${unit==='¥'?'¥':''}${ctx.parsed.y?.toLocaleString()||0}${unit!=='¥'?unit:''}`}}},scales:{x:dAxis(),y:dAxis()}};}
+function dc(id){var c=document.getElementById(id);if(c){var ex=Chart.getChart(c);if(ex)ex.destroy();}}
+function fmtM(v){if(!v)return '0';if(v>=1000000)return (v/1000000).toFixed(1)+'M';if(v>=1000)return Math.round(v/1000)+'K';return v.toLocaleString();}
+function fmtK(v){if(!v&&v!==0)return '0';if(Math.abs(v)>=1000000)return (v/1000000).toFixed(1)+'M';if(Math.abs(v)>=1000)return Math.round(v/1000)+'K';return v.toLocaleString();}
+function dAxis(){return {grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8891a8',font:{size:10}}};}
+function cOpts(unit){return {responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8891a8',font:{size:11},boxWidth:12}},tooltip:{backgroundColor:'#181c24',titleColor:'#e8eaf0',bodyColor:'#8891a8',borderColor:'#2a2f3d',borderWidth:1,callbacks:{label:function(ctx){var v=ctx.parsed.y!=null?ctx.parsed.y.toLocaleString():'0';return ' '+ctx.dataset.label+': '+(unit==='¥'?'¥':'')+v+(unit!=='¥'?unit:'');}}}},scales:{x:dAxis(),y:dAxis()}};}
 
-loadAllData();
+loadAll();
 </script>
 </body>
 </html>
